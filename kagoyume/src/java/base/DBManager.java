@@ -14,7 +14,7 @@ public class DBManager {
         Connection con = null;
         try{
             Class.forName("com.mysql.jdbc.Driver");
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/kagoyume_db","odijor","j2rtfdy3");
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/kagoyume_db?useUnicode=true&characterEncoding=utf8","odijor","j2rtfdy3");
             System.out.println("DBConnected!!");
             return con;
         }catch(ClassNotFoundException e){

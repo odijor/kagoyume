@@ -5,6 +5,7 @@ import javax.servlet.http.*;
 import javax.servlet.jsp.*;
 import javax.servlet.http.HttpSession;
 import main.KagoyumeHelper;
+import main.UserDataDTO;
 
 public final class top_jsp extends org.apache.jasper.runtime.HttpJspBase
     implements org.apache.jasper.runtime.JspSourceDependent {
@@ -43,11 +44,19 @@ public final class top_jsp extends org.apache.jasper.runtime.HttpJspBase
       _jspx_out = out;
       _jspx_resourceInjector = (org.glassfish.jsp.api.ResourceInjector) application.getAttribute("com.sun.appserv.jsp.resource.injector");
 
-      out.write('\n');
-      out.write('\n');
+      out.write("\n");
+      out.write("\n");
+      out.write("\n");
 
-    HttpSession hs = request.getSession();
-    KagoyumeHelper jh = KagoyumeHelper.getInstance();
+    KagoyumeHelper helper = KagoyumeHelper.getInstance();
+    String URL ="/top.jsp";
+    int loginID=-1;
+    String name="";
+    if((UserDataDTO)session.getAttribute("active") != null){
+    UserDataDTO active = (UserDataDTO)session.getAttribute("active");
+    
+    loginID = active.getUserID();
+    name = active.getName();}
 
       out.write("\n");
       out.write("\n");
@@ -56,15 +65,16 @@ public final class top_jsp extends org.apache.jasper.runtime.HttpJspBase
       out.write("<html>\n");
       out.write("    <head>\n");
       out.write("        <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n");
-      out.write("        <title>JSP Page</title>\n");
+      out.write("        <title>top</title>\n");
       out.write("    </head>\n");
       out.write("    <body>\n");
-      out.write("        <form action=\"Login\" method=\"post\">\n");
-      out.write("            <input type=\"hidden\" name=\"top\">\n");
-      out.write("            <input type=\"submit\" value=\"ログイン\">\n");
-      out.write("        </form><br><br><br><br>\n");
-      out.write("        <h1>かごゆめへようこそ!!</h1><br>\n");
-      out.write("        キーワード検索:<form action=\"Search\" method=\"GET\">\n");
+      out.write("        ");
+      out.print(helper.loginCheck(URL,loginID,name));
+      out.write("\n");
+      out.write("        <h2>かごゆめ!!</h2><br>\n");
+      out.write("        商取引の無いECサイトです。<br>\n");
+      out.write("        自由に買い物をして合計金額を確認してみましょう。<br>\n");
+      out.write("        <h3>キーワード検索:</h3><form action=\"Search\" method=\"GET\">\n");
       out.write("            <input type=\"text\" name=\"searchkey\">\n");
       out.write("            <input type=\"submit\" name=\"btnSubmit\" value=\"検索\">\n");
       out.write("        </form>\n");

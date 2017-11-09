@@ -7,11 +7,13 @@ package main;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -32,17 +34,25 @@ public class Myhistory extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet Myhistory</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet Myhistory at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+        try{
+            HttpSession session = request.getSession();
+            
+            //アクセスルートチェック
+            String accesschk = request.getParameter("ac");
+            if(accesschk ==null || (Integer)session.getAttribute("ac")!=Integer.parseInt(accesschk)){
+                throw new Exception("不正なアクセスです");
+            }
+            
+            UserDataDTO DTO=(UserDataDTO)session.getAttribute("active");
+            ArrayList<ArrayList>resultList =UserDataDAO.getInstance().searchBuy(DTO);
+            session.setAttribute("resultList",resultList);
+            
+            session.setAttribute("ac", (int) (Math.random() * 1000));
+            request.getRequestDispatcher("/myhistory.jsp").forward(request, response);
+        }catch(Exception e){
+            //何らかの理由で失敗したらエラーページにエラー文を渡して表示。
+            request.setAttribute("error", e.getMessage());
+            request.getRequestDispatcher("/error.jsp").forward(request, response);
         }
     }
 

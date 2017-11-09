@@ -7,11 +7,13 @@ package main;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -32,17 +34,24 @@ public class Cart extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet Cart</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet Cart at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+        try{
+            HttpSession session = request.getSession();
+            ArrayList<SearchDataBeans> usercart =new ArrayList<>();
+            int total=0;
+            if(session.getAttribute("usercart")!=null){
+                usercart = (ArrayList<SearchDataBeans>)session.getAttribute("usercart");
+                
+            if(request.getParameter("delete") != null)usercart.remove(Integer.parseInt(request.getParameter("delete")));
+            for(SearchDataBeans i:usercart) {
+            total = total + Integer.parseInt(i.getPriceData());
+            }
+            session.setAttribute("total",total);
+            }
+            request.getRequestDispatcher("/cart.jsp").forward(request, response);
+        }catch(Exception e){
+            //何らかの理由で失敗したらエラーページにエラー文を渡して表示。
+            request.setAttribute("error", e.getMessage());
+            request.getRequestDispatcher("/error.jsp").forward(request, response);
         }
     }
 

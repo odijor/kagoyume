@@ -12,6 +12,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -32,17 +33,39 @@ public class RegistrationComplete extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet RegistrationComplete</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet RegistrationComplete at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+        try{HttpSession session = request.getSession();
+        
+            //アクセスルートチェック
+            String accesschk = request.getParameter("ac");
+            if(accesschk ==null || (Integer)session.getAttribute("ac")!=Integer.parseInt(accesschk)){
+                throw new Exception("不正なアクセスです");
+            }
+        
+            UserData ud = (UserData)session.getAttribute("ud");
+            
+            //DTOオブジェクトにマッピング。DB専用のパラメータに変換
+            UserDataDTO DTO = ud.castToDTO();
+            
+            //DBで一致するものがあるか確認
+            UserDataDTO loginUser = UserDataDAO .getInstance().login(DTO);
+            //存在したらエラーページへ
+            if(loginUser != null)throw new Exception("パスワードが危険です。再入力をお願いします。");
+            
+            //DBへデータの挿入
+            UserDataDAO .getInstance().insert(DTO);
+            
+            //成功したのでセッションの値を削除
+            session.removeAttribute("ud");
+            
+            //結果画面での表示用に入力パラメータ―をリクエストパラメータとして保持
+            request.setAttribute("DTO", DTO);
+            
+            session.setAttribute("ac", (int) (Math.random() * 1000));
+            request.getRequestDispatcher("/registrationcomplete.jsp").forward(request, response);
+        }catch(Exception e){
+            //何らかの理由で失敗したらエラーページにエラー文を渡して表示。
+            request.setAttribute("error", e.getMessage());
+            request.getRequestDispatcher("/error.jsp").forward(request, response);
         }
     }
 

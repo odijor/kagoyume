@@ -11,12 +11,14 @@ public class UserData {
     private String password;
     private String mail;
     private String address;
+    private String loginID;
     
     public void UserData(){
         this.name = "";
         this.password= "";
         this.mail="";
         this.address="";
+        this.loginID=null;
     }
     
     public String getName() {
@@ -56,7 +58,7 @@ public class UserData {
     }
     
     public String getAddress() {
-        return name;
+        return address;
     }
     public void setAddress(String address) {
         //空文字(未入力)の場合空文字をセット
@@ -66,6 +68,8 @@ public class UserData {
             this.address = address;
         }
     }
+    public String getLogin(){return loginID;}
+    public void setLogin(String loginID){this.loginID=loginID;}
     
     public ArrayList<String> chkproperties(){
         ArrayList<String> chkList = new ArrayList<>();
@@ -84,4 +88,21 @@ public class UserData {
         
         return chkList;
     }
+    
+    public UserDataDTO castToDTO(){
+        UserDataDTO DTO =new UserDataDTO();
+        DTO.setName(this.name);
+        DTO.setPassword(this.password);
+        DTO.setMail(this.mail);
+        DTO.setAddress(this.address);
+        return DTO;
+    }
+    
+    public void castFromDTO(UserDataDTO DTO){
+        this.name=DTO.getName();
+        this.password=DTO.getPassword();
+        this.mail=DTO.getMail();
+        this.address=DTO.getAddress();
+    }
+    
 }

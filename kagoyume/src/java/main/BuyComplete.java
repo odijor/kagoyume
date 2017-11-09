@@ -5,13 +5,23 @@
  */
 package main;
 
+import base.DBManager;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -30,19 +40,66 @@ public class BuyComplete extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws ServletException, IOException, SQLException {
         response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet BuyComplete</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet BuyComplete at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+        
+        Connection con = null;
+        PreparedStatement st = null;
+        HttpSession session = request.getSession();
+        
+        
+        
+        ArrayList<SearchDataBeans> usercart =new ArrayList<>();
+        int type = Integer.parseInt(request.getParameter("type"));
+        usercart = (ArrayList<SearchDataBeans>)session.getAttribute("usercart");
+        UserDataDTO DTO=(UserDataDTO)session.getAttribute("active");
+        HashMap <Integer,ArrayList<SearchDataBeans>>userlog=(HashMap <Integer,ArrayList<SearchDataBeans>>)session.getAttribute("userList");
+        
+        try{
+            //アクセスルートチェック
+            String accesschk = request.getParameter("ac");
+            if(accesschk ==null || (Integer)session.getAttribute("ac")!=Integer.parseInt(accesschk)){
+                throw new Exception("不正なアクセスです");
+            }
+            
+            con = DBManager.getConnection();
+            for(SearchDataBeans i:usercart){
+            st =  con.prepareStatement("INSERT INTO buy_t(userID,type,itemcode,buyDate) VALUES(?,?,?,?)");
+            st.setInt(1,DTO.getUserID());
+            st.setInt(2, type);
+            st.setString(3, i.getCode());
+            st.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+            st.executeUpdate();
+            System.out.println("insert completed");
+            }
+            
+            st =  con.prepareStatement("UPDATE user_t set total=total+? where userID=?;");
+            st.setInt(1, (Integer)session.getAttribute("total"));
+            st.setInt(2, DTO.getUserID());
+            st.executeUpdate();
+            System.out.println("update completed");
+            
+            DTO.setTotal(DTO.getTotal()+(Integer)session.getAttribute("total"));
+            
+            //空のArrayListに差し替えることでusercartの中身を除去(removeAllの場合usercartがnullという問題発生)
+            ArrayList<SearchDataBeans> clear =new ArrayList<>();
+            session.setAttribute("usercart",clear);
+            if(userlog.containsKey(DTO.getUserID())){
+                userlog.remove(DTO.getUserID());
+                session.setAttribute("userList",userlog);
+            }
+            
+            
+            session.setAttribute("ac", (int) (Math.random() * 1000));
+            request.getRequestDispatcher("/buycomplete.jsp").forward(request, response);
+        }catch(Exception e){
+            //何らかの理由で失敗したらエラーページにエラー文を渡して表示。
+            request.setAttribute("error", e.getMessage());
+            request.getRequestDispatcher("/error.jsp").forward(request, response);
+        }finally{
+            if(con != null){
+                con.close();
+            }
         }
     }
 
@@ -58,7 +115,11 @@ public class BuyComplete extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        try {
+            processRequest(request, response);
+        } catch (SQLException ex) {
+            Logger.getLogger(BuyComplete.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
@@ -72,7 +133,11 @@ public class BuyComplete extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        try {
+            processRequest(request, response);
+        } catch (SQLException ex) {
+            Logger.getLogger(BuyComplete.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**

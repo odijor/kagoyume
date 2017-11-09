@@ -12,6 +12,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -31,18 +32,33 @@ public class RegistrationConfirm extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        
         response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet RegistrationConfirm</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet RegistrationConfirm at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+        try{
+            HttpSession session = request.getSession();
+            
+            //アクセスルートチェック
+            String accesschk = request.getParameter("ac");
+            if(accesschk ==null || (Integer)session.getAttribute("ac")!=Integer.parseInt(accesschk)){
+                throw new Exception("不正なアクセスです");
+            }
+            
+            //入力された値をbeansに格納
+            UserData ud = new UserData();
+            ud.setName(request.getParameter("name"));
+            ud.setPassword(request.getParameter("pass"));
+            ud.setMail(request.getParameter("mail"));
+            ud.setAddress(request.getParameter("address"));
+            
+            session.setAttribute("ud", ud);
+            
+            session.setAttribute("ac", (int) (Math.random() * 1000));
+            request.getRequestDispatcher("/ragistrationconform.jsp").forward(request, response); 
+        }catch(Exception e){
+            //何らかの理由で失敗したらエラーページにエラー文を渡して表示。
+            request.setAttribute("error", e.getMessage());
+            request.getRequestDispatcher("/error.jsp").forward(request, response);
         }
     }
 
